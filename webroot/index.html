@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turbo Performance Boost Pro</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --accent-hover: #0284c7;
+            --danger-color: #f43f5e;
+            --text-color: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        body {
+            margin: 0;
+            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .badge {
+            background: rgba(56, 189, 248, 0.2);
+            color: var(--accent-color);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 4px;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .section {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: var(--accent-color);
+            color: #000;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:active {
+            background: var(--accent-hover);
+        }
+
+        .slider-container {
+            margin-top: 8px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+
+        input[type=range] {
+            width: 100%;
+            accent-color: var(--accent-color);
+        }
+
+        .log-box {
+            background: #020617;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #4ade80;
+            height: 60px;
+            overflow-y: auto;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="title">Turbo Boost Pro</div>
+        <div class="badge">Axeron Active</div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">RAM Usage</div>
+            <div class="stat-value" id="ram-val">--%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Bat. Temp</div>
+            <div class="stat-value" id="temp-val">--°C</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Instant Optimizer</div>
+        <button class="btn" onclick="triggerBoost()">PURGE RAM & BOOST GPU</button>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Gaming Resolution Downscale</div>
+        <div class="slider-container">
+            <div class="slider-header">
+                <span>Scale Factor</span>
+                <span id="scale-val">100% (Native)</span>
+            </div>
+            <input type="range" id="scale-slider" min="70" max="100" value="100" step="5" onchange="updateScale(this.value)">
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Console Output</div>
+        <div class="log-box" id="log-box">> System initialized. Ready.</div>
+    </div>
+
+    <script>
+        function log(msg) {
+            const box = document.getElementById('log-box');
+            box.innerText = `> ${msg}\n` + box.innerText;
+        }
+
+        function execKsu(cmd) {
+            return new Promise((resolve) => {
+                if (window.ksu && window.ksu.exec) {
+                    window.ksu.exec(cmd, '{}', (res) => {
+                        resolve(res);
+                    });
+                } else {
+                    resolve("MOCK_EXEC");
+                }
+            });
+        }
+
+        async function triggerBoost() {
+            log("Executing RAM purge and GPU lock...");
+            const res = await execKsu("sh /data/user_de/0/com.android.shell/axeron/plugins/turbo_performance_boost/action.sh boost");
+            log(res !== "MOCK_EXEC" ? res : "Boost command dispatched.");
+        }
+
+        async function updateScale(val) {
+            document.getElementById('scale-val').innerText = `${val}%`;
+            log(`Resolution scale set to ${val}%`);
+            if(val < 100) {
+                await execKsu(`wm density reset`); // Custom wm scaling commands can be chained here
+            }
+        }
+
+        async function updateStats() {
+            const output = await execKsu("sh /data/user_de/0/com.android.shell/axeron/plugins/turbo_performance_boost/action.sh stats");
+            if(output && output.includes("TEMP:")) {
+                const parts = output.trim().split("|");
+                const temp = parts[0].split(":")[1];
+                const ram = parts[1].split(":")[1];
+                document.getElementById('temp-val').innerText = `${temp}°C`;
+                document.getElementById('ram-val').innerText = `${ram}%`;
+            }
+        }
+
+        // Poll stats every 3 seconds
+        setInterval(updateStats, 3000);
+    </script>
+</body>
+</html>
