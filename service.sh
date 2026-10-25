@@ -1,59 +1,44 @@
-#!/system/bin/sh
-MODDIR=${0%/*}
+# ==========================================
+# 1. SURFACEFLINGER & RENDERING OPTIMIZATIONS
+# ==========================================
+setprop debug.sf.hw 1
+setprop debug.sf.early_app_phase_offset_ns -24000000
+setprop debug.sf.early_gl_phase_offset_ns -30000000
+setprop debug.sf.early_gl_app_phase_offset_ns -15000000
+setprop debug.sf.early_phase_offset_ns -24000000
+setprop debug.sf.high_refresh_rate_matching 1
+setprop debug.sf.layer_caching_active_deactivation_ns 1
 
-# Wait for system boot to complete
-until [ "$(getprop sys.boot_completed)" = "1" ]; do
-    sleep 5
-done
+# ==========================================
+# 2. VULKAN & GRAPHICS PIPELINE BOOST
+# ==========================================
+setprop debug.vulkan.async_compute 1
+setprop debug.vulkan.frame_pacing 1
+setprop debug.vulkan.multi_thread 1
+setprop debug.vulkan.pipeline_cache 1
+setprop debug.vulkan.precompile_shaders 1
+setprop debug.vulkan.enable_extension_vsync 0
+setprop debug.hwui.renderer skia_vk
+setprop debug.hwui.use_hint_manager 1
 
-sleep 10
+# ==========================================
+# 3. HARDWARE ACCELERATION & UI FLUIDITY
+# ==========================================
+setprop video.accelerate.hw 1
+setprop debug.performance.tuning 1
+setprop debug.hwui.target_fps 120
+setprop persist.sys.ui.hw 1
 
-# ------------------------------------
-# Hardware & CPU Cluster Detection
-# ------------------------------------
-SOC_MODEL=$(getprop ro.soc.model)
-[ -z "$SOC_MODEL" ] && SOC_MODEL=$(getprop ro.hardware)
+# ==========================================
+# 4. TOUCH RESPONSIVENESS & INPUT BOOST
+# ==========================================
+setprop debug.touch.boost 1
+setprop ro.min.fling_velocity 16000
+setprop ro.max.fling_velocity 32000
 
-# Enable Touch Sampling & Response Tweaks
-for touch_node in /sys/class/touch/touch_dev/gestures /sys/devices/platform/soc/*.touch/touch_boost; do
-    if [ -f "$touch_node" ]; then
-        echo "1" > "$touch_node" 2>/dev/null
-    fi
-done
+# ==========================================
+# 5. NETWORKING & PING STABILIZATION (GAMING)
+# ==========================================
+setprop net.tcp.buffersize.default 4096,87380,704200,4096,16384,110208
+setprop net.tcp.buffersize.wifi 524288,1048576,2097152,262144,524288,1048576
 
-# Set IO Scheduler to Performance / Deadline if available
-for block_dev in /sys/block/sd*/queue/scheduler /sys/block/dm-*/queue/scheduler; do
-    if [ -f "$block_dev" ]; then
-        echo "performance" > "$block_dev" 2>/dev/null || echo "deadline" > "$block_dev" 2>/dev/null
-    fi
-done
-
-# ------------------------------------
-# Dynamic Thermal & Performance Loop
-# ------------------------------------
-while true; do
-    # Get Battery Temperature (in tenths of °C, e.g., 410 = 41°C)
-    BAT_TEMP=$(cat /sys/class/power_supply/battery/temp 2>/dev/null)
-    [ -z "$BAT_TEMP" ] && BAT_TEMP=300
-
-    if [ "$BAT_TEMP" -gt 430 ]; then
-        # Thermal Throttling Mitigation: Rest back to balanced to prevent overheating
-        for gov in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
-            echo "schedutil" > "$gov" 2>/dev/null
-        done
-    else
-        # Optimal Thermal State: Apply Performance scaling
-        for gov in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
-            echo "performance" > "$gov" 2>/dev/null
-        done
-    fi
-
-    # RAM Management: Purge cached memory periodically if free RAM is low
-    MEM_FREE_MB=$(free -m | awk '/Mem:/ {print $4}')
-    if [ "$MEM_FREE_MB" -lt 500 ]; then
-        sync
-        echo 3 > /proc/sys/vm/drop_caches
-    fi
-
-    sleep 15
-done
