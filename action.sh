@@ -17,7 +17,7 @@ case "$CMD" in
         echo "SUCCESS: Extreme Boost Applied & Cache Purged"
         ;;
     "stats"|*)
-        # Outputs formatted stats for Web UI ingestion (defaults if no arg passed)
+        # Outputs formatted stats for Web UI ingestion
         BAT_TEMP=$(awk '{print $1/10}' /sys/class/power_supply/battery/temp 2>/dev/null)
         [ -z "$BAT_TEMP" ] && BAT_TEMP="32.5"
         
@@ -26,4 +26,4 @@ case "$CMD" in
         
         echo "TEMP:${BAT_TEMP}|RAM:${RAM_USAGE}"
         ;;
-es:ac
+esac
